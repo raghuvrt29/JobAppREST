@@ -1,6 +1,7 @@
 package com.raghuvrt29.JobAppRest.controller;
 
 import com.raghuvrt29.JobAppRest.model.User;
+import com.raghuvrt29.JobAppRest.service.JwtService;
 import com.raghuvrt29.JobAppRest.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,27 +17,30 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserController {
 
     @Autowired
-    UserService service;
+    private UserService service;
 
     @Autowired
-    AuthenticationManager authenticationManager;
+    private AuthenticationManager authenticationManager;
+
+    @Autowired
+    private JwtService jwtService;
 
     private BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(12);
 
-    @PostMapping
+    @PostMapping("/register")
     public String register(@RequestBody User user){
         user.setPassword(encoder.encode(user.getPassword()));
         service.saveUser(user);
         return "Successfully Registered";
     }
 
-    @PostMapping
+    @PostMapping("/login")
     public String login(@RequestBody User user){
         Authentication authentication = authenticationManager
                 .authenticate(new UsernamePasswordAuthenticationToken(user.getUsername(),user.getPassword()));
 
         if(authentication.isAuthenticated()){
-            return "Successfully Logged in";
+            return jwtService.generateToken(user.getUsername());
         }
         else{
             return "Login failed";
